@@ -23,7 +23,8 @@ a:hover {
 }
 
 body {
-  margin: 0 aoto;
+  margin: 0 20px;
+  padding-bottom: 20px;
   display: flex;
   place-items: center;
   justify-content: center;
