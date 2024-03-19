@@ -2,32 +2,35 @@ import { useEffect, useState } from "react";
 import axios from 'axios'
 import { postType } from "../../types/postType";
 import PostItem  from "../postItem/postItem";
-import styles from './main.module.scss'
+import styles from './mainScreen.module.scss'
 import MoreButton from "../moreButton/moreButton";
-
-const fetchingStock: number = 100;
-const buttonInit = 5
-
+import Loading from "../loading/loading";
+import { buttonInit, fetchingStock } from "../../utils/const";
 
 export default function Main() {
   const [posts, setPosts] = useState<postType[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [fetching, setFetching] = useState<boolean>(true)
+  const [isFetching, setIsFetching] = useState<boolean>(true)
   const [totalCount, setTotalCount] = useState<number>(0)
 
   useEffect(() => {
-    if (fetching) {
+    if (isFetching) {
       axios.get(`https://jsonplaceholder.typicode.com/posts?_limit=10&_page=${currentPage}`)
       .then(response => {
+        if (response.status !== 200) {
+            throw new Error(response.statusText)
+        }
+        console.log(response.status, response.statusText)
         setPosts([...posts, ...response.data])
         setCurrentPage(prevState => prevState + 1)
         setTotalCount(response.headers['x-total-count'])
       })
       .finally(() => {
-        setFetching(false)
+        setIsFetching(false)
       })
+      .catch((err) => console.log(err))
     }
-  }, [fetching])
+  }, [isFetching])
 
 
   useEffect(() => {
@@ -40,13 +43,13 @@ export default function Main() {
 
   const scrollHandler = (e: any) => {
     if (e.target.documentElement.scrollHeight - (e.target.documentElement.scrollTop + window.innerHeight) < fetchingStock && currentPage <= buttonInit) {
-      setFetching(true)
+      setIsFetching(true)
     }
   }
 
   const moreButtomHandler = () => {
     if (posts.length < totalCount) {
-      setFetching(true)
+      setIsFetching(true)
     }
   }
 
@@ -59,7 +62,8 @@ export default function Main() {
             <PostItem post={post}/>
           </li>))}
       </ul>
-      {currentPage >= buttonInit && posts.length <= totalCount ? <MoreButton onClick={moreButtomHandler}/> : null}
+      {isFetching ? <Loading /> : null}
+      {currentPage > buttonInit && posts.length <= totalCount ? <MoreButton onClick={moreButtomHandler}/> : null}
     </section>
   );
 }
